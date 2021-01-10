@@ -17,9 +17,9 @@ namespace Scripts1
         [SerializeField] private int objectAmount;
         [SerializeField] private GameObject cubePrefab;
         [SerializeField] private int spawnTimeAmount;
-        private int count;
+
         private int testCount;
-        
+
         private void Awake()
         {
             Instance = this; // singleton makes us to reach this class's public methods and attributes from other classes
@@ -27,29 +27,16 @@ namespace Scripts1
 
         private void Start()
         {
-            // comment StartCoroutine and InitializePool when you test
-            // comment TestObjectCreation when you don't test
+            // comment other tests when you test one of them
             
-            //TestObjectCreation();
             
-            InitializePool(); // create object amount of objectAmount at start of the game
-            StartCoroutine(SpawnObject()); // spawn object amount of spawnAmount every 0.02 seconds
-        }
-        
-        // how much time it cost to create objectAmount object
-        private void TestObjectCreation()
-        {
-            for (int i = 0; i < objectAmount; i++)
-            {
-                var createdObject = Instantiate(cubePrefab);
-                createdObject.SetActive(false);
-                testCount++;
-            }
+            //TestObjectCreation(); // test 1
             
-            if (testCount == objectAmount)
-            {
-                Debug.Log("Object Creation Time With Pool: " + Time.realtimeSinceStartup);
-            }
+            //TestObjectCreation2(); // test 2
+            
+            /* test 2*/
+            InitializePool(); // create object amount of objectAmount at start of the game (fill the pool)
+            StartCoroutine(SpawnObject()); // spawn object amount of spawnAmount every 0.001 seconds
         }
         
         private void InitializePool()
@@ -61,34 +48,66 @@ namespace Scripts1
                 objectPool.Enqueue(createdObject);
             }
         }
-
+        
+        // in this test we can see how much time it cost to create objectAmount object
+        private void TestObjectCreation()
+        {
+            for (int i = 0; i < objectAmount; i++)
+            {
+                var createdObject = Instantiate(cubePrefab);
+                createdObject.SetActive(false);
+                testCount++;
+            }
+            if (testCount == objectAmount)
+            {
+                Debug.Log("Object Creation Time With Pool: " + Time.realtimeSinceStartup);
+            }
+        }
+        
+        // (spawn needed amount and pop and push to pool immediately)
+        private void TestObjectCreation2()
+        {
+            for (int i = 0; i < objectAmount; i++)
+            {
+                var createdObject = Instantiate(cubePrefab);
+                createdObject.SetActive(false);
+                objectPool.Enqueue(createdObject);
+            }
+            
+            for (int i = 0; i < spawnTimeAmount; i++)
+            {
+                var popObject = PopObjectFromPool();
+                PushObjectToPool(popObject);
+                testCount++;
+                //Debug.Log("c"+ testCount);
+            }
+            
+            if (testCount == spawnTimeAmount)
+            {
+                Debug.Log("Time With Pool: " + Time.realtimeSinceStartup);
+            }
+        }
+        
+        // in this test we could do the calculations
         private IEnumerator SpawnObject()
         {
-            while (count != spawnTimeAmount)
+            while (testCount != spawnTimeAmount)
             {
                 var spawnedObject = PopObjectFromPool(); // get available object from pool
-                count++;
+                testCount++;
                 
                 // set random position for x and z between [-2,3)
                 float randomPositionX = Random.Range(-2, 3);
                 float randomPositionZ = Random.Range(-2, 3);
                 var randomPosition = new Vector3(randomPositionX, transform.position.y, randomPositionZ);
-            
-                // set random force for x and z between [-7,8) for y between [8,17)
-                float forceX = Random.Range(-7, 8);
-                float forceY = Random.Range(16 * 0.5f, 17);
-                float forceZ = Random.Range(-7, 8);
-
-                var force = new Vector3(forceX, forceY, forceZ);
-
                 spawnedObject.transform.position = randomPosition; // give the random position pop object
-                var rb = spawnedObject.GetComponent<Rigidbody>(); // get pop object rigidbody
 
-                rb.velocity = force; // add velocity
-                rb.angularVelocity = force; // turning around itself
+                if (testCount == spawnTimeAmount - 1)
+                {
+                    Debug.Log(Time.realtimeSinceStartup); // show the time in console
+                }
                 
-                //Debug.Log("COUNT: " + count);
-                yield return new WaitForSeconds(0.02f);
+                yield return new WaitForSeconds(0.001f);
             }
         }
 
@@ -101,7 +120,6 @@ namespace Scripts1
 
         public void PushObjectToPool(GameObject pushedObject)
         {
-            //obj.transform.position = new Vector3(0, 0, 0); // set pushed object to 
             pushedObject.SetActive(false); // deactivate in game world pushed object
             objectPool.Enqueue(pushedObject); // put back to the pool
         }
