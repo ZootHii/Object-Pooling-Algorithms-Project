@@ -1,5 +1,5 @@
 # Object Pooling
- Desing And Analysis of Algorithms Project - Object Pooling method with Unity
+ Design And Analysis of Algorithms Project - Object Pooling method with Unity
  
  **We wrote this code by communicating with each other on discord.**<br/>
  
